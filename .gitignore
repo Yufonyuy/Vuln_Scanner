@@ -1,0 +1,18 @@
+# Secrets / Environment files
+.env
+.env.*
+
+# Backend dependencies and runtime
+backend/.env
+**/__pycache__/
+*.py[cod]
+backend/venv/
+
+# Frontend dependencies and builds
+node_modules/
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+# System files
+.DS_Store

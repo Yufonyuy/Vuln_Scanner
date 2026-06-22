@@ -1,0 +1,74 @@
+
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pentest_db
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+  redis:
+    image: redis:7-alpine
+    container_name: pentest_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+  backend:
+    build: ./backend
+    container_name: pentest_backend
+    command: daphne -b 0.0.0.0 -p 8000 core.asgi:application
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: ./backend
+    container_name: pentest_worker
+    command: celery -A core worker -l info --concurrency=4
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: pentest_frontend
+    ports:
+      - "3000:80" # Nginx will serve on 80 inside, mapped to 3000 outside
+    depends_on:
+      - backend
+volumes:
+  postgres_data:
+  
