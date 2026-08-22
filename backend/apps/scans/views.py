@@ -1,9 +1,12 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
-from weasyprint import HTML
+try:
+    from weasyprint import HTML
+except Exception:
+    HTML = None
 from django.template.loader import render_to_string
 from .models import Target, Scan, Finding
 from .serializers import (
@@ -26,9 +29,10 @@ class ScanViewSet(viewsets.ModelViewSet):
         create_serializer.is_valid(raise_exception=True)
         url = create_serializer.validated_data['url']
         depth = create_serializer.validated_data['depth']
+        headers = create_serializer.validated_data.get('headers', {})
 
         target, _ = Target.objects.get_or_create(url=url)
-        scan = Scan.objects.create(target=target, depth=depth, status='PENDING')
+        scan = Scan.objects.create(target=target, depth=depth, headers=headers, status='PENDING')
 
         run_scan_async.delay(scan.id)
 

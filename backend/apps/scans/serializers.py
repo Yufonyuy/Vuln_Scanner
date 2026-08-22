@@ -38,6 +38,7 @@ class ScanSerializer(serializers.ModelSerializer):
 class ScanCreateSerializer(serializers.Serializer):
     url = serializers.URLField(required=True)
     depth = serializers.IntegerField(min_value=1, max_value=5, default=2)
+    headers = serializers.JSONField(required=False, default=dict)
 
     def validate_url(self, value):
         # Basic validation: ensure it has scheme

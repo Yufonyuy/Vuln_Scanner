@@ -72,10 +72,10 @@ class Finding(models.Model):
     vuln_type = models.CharField(max_length=255)    # e.g., "SQL Injection", "XSS" "IDOR"
     severity = models.CharField(max_length=100, choices=SeverityChoices.choices)
     cvss_score = models.FloatField(null=True, blank=True)
-    cwe_id = models.IntegerField(null=True, blank=True) # CWE-89, CWE-79, etc
+    cwe_id = models.CharField(max_length=20, null=True, blank=True) # CWE-89, CWE-79, etc
 
     # Evidence & Remediation
-    evidence = models.TimeField(blank=True, null=True, help_text='Snippet of response or logs proving the vuln')
+    evidence = models.TextField(blank=True, null=True, help_text='Snippet of response or logs proving the vuln')
     remediation = models.TextField(blank=True, null=True, help_text="AI-generated")
 
     # AI Validation

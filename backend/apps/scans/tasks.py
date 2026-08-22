@@ -46,7 +46,7 @@ def run_scan_async(self, scan_id, depth=2):
         await save_scan()
         await send_update('send_log', {'message': 'Scan started'})
 
-        client = AsyncHTTPClient(rate_limit=10)
+        client = AsyncHTTPClient(rate_limit=10, headers=scan.headers)
         try:
             # ---- Crawl ----
             scan.current_stage = "Crawling the website..."

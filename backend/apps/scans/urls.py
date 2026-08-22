@@ -6,8 +6,8 @@ router = DefaultRouter()
 router.register(r'targets', views.TargetViewSet)
 router.register(r'scans', views.ScanViewSet, basename='scan')
 router.register(r'findings', views.FindingViewSet)
-path('scans/<uuid:id>/export/pdf/', ScanPDFExportView.as_view(), name='scan-pdf-export'),
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('scans/<uuid:id>/export/pdf/', views.ScanPDFExportView.as_view(), name='scan-pdf-export'),
 ]
