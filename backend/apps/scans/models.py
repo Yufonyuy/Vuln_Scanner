@@ -38,6 +38,7 @@ class Scan(models.Model):
     target= models.ForeignKey(Target, on_delete=models.CASCADE, related_name='scans')
     status = models.CharField(max_length=20, choices=ScanStatusChoices.choices, default=ScanStatusChoices.PENDING)
     depth = models.PositiveIntegerField(default=2, help_text="Crawl depth level")
+    headers = models.JSONField(default=dict, blank=True, help_text="Custom HTTP headers sent during the scan")
 
     # Progress Tracking
     progress = models.PositiveIntegerField(default=0, help_text="0 to 100")
