@@ -112,20 +112,32 @@ else:
 REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL') or REDIS_URL
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND') or REDIS_URL
+if CELERY_BROKER_URL and CELERY_BROKER_URL.startswith('rediss://') and 'ssl_cert_reqs' not in CELERY_BROKER_URL:
+    separator = '&' if '?' in CELERY_BROKER_URL else '?'
+    CELERY_BROKER_URL = f"{CELERY_BROKER_URL}{separator}ssl_cert_reqs=none"
+if CELERY_RESULT_BACKEND and CELERY_RESULT_BACKEND.startswith('rediss://') and 'ssl_cert_reqs' not in CELERY_RESULT_BACKEND:
+    separator = '&' if '?' in CELERY_RESULT_BACKEND else '?'
+    CELERY_RESULT_BACKEND = f"{CELERY_RESULT_BACKEND}{separator}ssl_cert_reqs=none"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': 0}
+CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': 0}
 
 
 # Django Channels (Websockets) - Using Redis as channel layer
 if os.getenv('REDIS_URL'):
+    redis_hosts = [REDIS_URL]
+    if REDIS_URL.startswith('rediss://') and 'ssl_cert_reqs' not in REDIS_URL:
+        separator = '&' if '?' in REDIS_URL else '?'
+        redis_hosts = [f"{REDIS_URL}{separator}ssl_cert_reqs=none"]
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": [REDIS_URL],
+                "hosts": redis_hosts,
             },
         },
     }
