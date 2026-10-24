@@ -3,11 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 try:
     from weasyprint import HTML
 except Exception:
     HTML = None
-from django.template.loader import render_to_string
 from .models import Target, Scan, Finding
 from .serializers import (
     TargetSerializer, ScanSerializer, FindingSerializer, ScanCreateSerializer
