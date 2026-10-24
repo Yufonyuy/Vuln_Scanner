@@ -14,6 +14,9 @@ async def check_csrf(url, client=None):
     findings = []
     try:
         response = await client.get(url)
+        if not response:
+            return findings
+            
         soup = BeautifulSoup(response.text, 'html.parser')
         forms = soup.find_all('form')
         for form in forms:
@@ -33,7 +36,7 @@ async def check_csrf(url, client=None):
                     'parameter': 'form_action',
                     'payload': action,
                     'vuln_type': 'CSRF (Missing Token)',
-                    'severity': 'Medium',
+                    'severity': 'MEDIUM',
                     'cvss_score': 6.5,
                     'cwe_id': 'CWE-352',
                     'evidence': f"Form action '{action}' lacks CSRF token.",

@@ -26,18 +26,16 @@ async def check_idor(url, client=None):
                     new_url = urlunparse(parsed._replace(query=urlencode(new_query, doseq=True)))
                     try:
                         response = await client.get(new_url)
-                        # Simple heuristic: if status is 200 and content differs, it might be IDOR
-                        # This is a very basic check; a full IDOR scanner is more complex.
-                        if response.status_code == 200:
+                        if response and response.status_code == 200:
                             # If the response body size differs significantly
                             original_response = await client.get(url)
-                            if len(response.text) != len(original_response.text):
+                            if original_response and len(response.text) != len(original_response.text):
                                 findings.append({
                                     'url': url,
                                     'parameter': key,
                                     'payload': str(new_val),
                                     'vuln_type': 'IDOR (Potential)',
-                                    'severity': 'High',
+                                    'severity': 'HIGH',
                                     'cvss_score': 7.5,
                                     'cwe_id': 'CWE-639',
                                     'evidence': f"Changed parameter {key} from {val} to {new_val} returned different content.",

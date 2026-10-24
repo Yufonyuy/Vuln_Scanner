@@ -38,6 +38,9 @@ class Scan(models.Model):
     target= models.ForeignKey(Target, on_delete=models.CASCADE, related_name='scans')
     status = models.CharField(max_length=20, choices=ScanStatusChoices.choices, default=ScanStatusChoices.PENDING)
     depth = models.PositiveIntegerField(default=2, help_text="Crawl depth level")
+    headers = models.JSONField(default=dict, blank=True, help_text="Custom HTTP headers sent during the scan")
+    cookies = models.JSONField(default=dict, blank=True, help_text="Session cookies attached to every request during the scan")
+    auth_config = models.JSONField(default=dict, blank=True, help_text="Authentication config: login form, bearer token or basic auth")
 
     # Progress Tracking
     progress = models.PositiveIntegerField(default=0, help_text="0 to 100")
@@ -72,10 +75,10 @@ class Finding(models.Model):
     vuln_type = models.CharField(max_length=255)    # e.g., "SQL Injection", "XSS" "IDOR"
     severity = models.CharField(max_length=100, choices=SeverityChoices.choices)
     cvss_score = models.FloatField(null=True, blank=True)
-    cwe_id = models.IntegerField(null=True, blank=True) # CWE-89, CWE-79, etc
+    cwe_id = models.CharField(max_length=20, null=True, blank=True) # CWE-89, CWE-79, etc
 
     # Evidence & Remediation
-    evidence = models.TimeField(blank=True, null=True, help_text='Snippet of response or logs proving the vuln')
+    evidence = models.TextField(blank=True, null=True, help_text='Snippet of response or logs proving the vuln')
     remediation = models.TextField(blank=True, null=True, help_text="AI-generated")
 
     # AI Validation

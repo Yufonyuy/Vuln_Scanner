@@ -46,8 +46,28 @@ def run_scan_async(self, scan_id, depth=2):
         await save_scan()
         await send_update('send_log', {'message': 'Scan started'})
 
-        client = AsyncHTTPClient(rate_limit=10)
+        client = AsyncHTTPClient(rate_limit=10, headers=scan.headers, cookies=scan.cookies, auth_config=scan.auth_config)
+
         try:
+            # ---- Authentication (if configured) ----
+            if scan.auth_config:
+                auth_type = scan.auth_config.get('type')
+                if auth_type == 'login':
+                    scan.current_stage = "Authenticating via login form..."
+                    await save_scan()
+                    await send_update('send_log', {'message': f'Logging in at {scan.auth_config.get("login_url")}'})
+                    login_ok = await client.authenticate()
+                    if login_ok:
+                        await send_update('send_log', {'message': 'Login successful - session cookies captured'})
+                    else:
+                        await send_update('send_log', {'message': 'Login failed - continuing without session'})
+                elif auth_type == 'bearer':
+                    await send_update('send_log', {'message': 'Using Bearer token authentication'})
+                elif auth_type == 'basic':
+                    await send_update('send_log', {'message': 'Using HTTP Basic authentication'})
+                if scan.cookies:
+                    await send_update('send_log', {'message': 'Custom cookies attached to scanner requests'})
+
             # ---- Crawl ----
             scan.current_stage = "Crawling the website..."
             await save_scan()

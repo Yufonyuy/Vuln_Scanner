@@ -60,12 +60,15 @@ class SQLInjectionTest:
                     response_text_lower = resp.text.lower()
                     if any(sig in response_text_lower for sig in error_signatures):
                         findings.append({
-                            "type": "SQL Injection (Error-Based)",
+                            "vuln_type": "SQL Injection (Error-Based)",
                             "url": test_url,
-                            "param": param_key,
+                            "parameter": param_key,
                             "payload": payload,
+                            "cvss_score": 8.5,
+                            "cwe_id": "CWE-89",
                             "evidence": f"Exposed database engine anomaly found matching error signature arrays.",
-                            "severity": "HIGH"
+                            "severity": "HIGH",
+                            "remediation": "Use parameterized queries or prepared statements."
                         })
                         break # Found a definitive flaw on this parameter, move to time checks
 
@@ -88,12 +91,15 @@ class SQLInjectionTest:
                 # by ensuring the response time is at least 4.5 seconds AND at least 3x slower than baseline
                 if attack_time >= 4.5 and attack_time > (baseline_time * 3):
                     findings.append({
-                        "type": "SQL Injection (Time-Based Blind)",
+                        "vuln_type": "SQL Injection (Time-Based Blind)",
                         "url": test_url,
-                        "param": param_key,
+                        "parameter": param_key,
                         "payload": payload,
+                        "cvss_score": 8.5,
+                        "cwe_id": "CWE-89",
                         "evidence": f"Time anomaly verified. Target responded in {round(attack_time, 2)}s (Baseline: {round(baseline_time, 2)}s).",
-                        "severity": "HIGH"
+                        "severity": "HIGH",
+                        "remediation": "Use parameterized queries or prepared statements."
                     })
                     break # Parameter confirmed vulnerable
 

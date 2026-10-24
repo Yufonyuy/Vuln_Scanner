@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vuln Scan Report - {{ scan.target.url }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+        body { padding: 40px; color: #1f2937; font-size: 12px; line-height: 1.6; }
+        .header { border-bottom: 3px solid #111827; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { font-size: 24px; color: #111827; margin-bottom: 10px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .meta-item { background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px 12px; border-radius: 6px; }
+        .meta-item span { font-weight: bold; color: #111827; }
+        h2 { font-size: 18px; margin: 30px 0 15px 0; color: #111827; }
+        .summary { display: flex; gap: 12px; margin-bottom: 25px; }
+        .summary-card { flex: 1; text-align: center; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #f9fafb; }
+        .summary-card .count { font-size: 20px; font-weight: bold; color: #111827; }
+        .summary-card .label { text-transform: uppercase; font-size: 10px; letter-spacing: 1px; color: #6b7280; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #111827; color: #ffffff; text-align: left; padding: 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { border: 1px solid #e5e7eb; padding: 10px; vertical-align: top; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .severity-CRITICAL { color: #dc2626; font-weight: bold; }
+        .severity-HIGH { color: #ea580c; font-weight: bold; }
+        .severity-MEDIUM { color: #d97706; font-weight: bold; }
+        .severity-LOW { color: #2563eb; font-weight: bold; }
+        .severity-INFO { color: #6b7280; font-weight: bold; }
+        .code { font-family: "Courier New", monospace; background: #111827; color: #22c55e; padding: 4px 6px; border-radius: 4px; display: inline-block; word-break: break-all; }
+        .evidence { white-space: pre-wrap; word-break: break-word; }
+        .remediation { color: #065f46; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Web Pentest Suite - Vulnerability Assessment Report</h1>
+        <div class="meta-grid">
+            <div class="meta-item"><span>Target URL:</span> {{ scan.target.url }}</div>
+            <div class="meta-item"><span>Scan ID:</span> {{ scan.id }}</div>
+            <div class="meta-item"><span>Status:</span> {{ scan.status }}</div>
+            <div class="meta-item"><span>Crawl Depth:</span> {{ scan.depth }}</div>
+            <div class="meta-item"><span>Started At:</span> {{ scan.started_at }}</div>
+            <div class="meta-item"><span>Completed At:</span> {% if scan.ended_at %}{{ scan.ended_at }}{% else %}N/A{% endif %}</div>
+        </div>
+    </div>
+
+    <h2>Executive Summary</h2>
+    <div class="summary">
+        <div class="summary-card"><div class="count">{{ findings|length }}</div><div class="label">Total Findings</div></div>
+        <div class="summary-card"><div class="count">{{ scan.discovered_urls|length }}</div><div class="label">Discovered URLs</div></div>
+        <div class="summary-card"><div class="count">{{ scan.forms_found|length }}</div><div class="label">Forms Found</div></div>
+    </div>
+
+    <h2>Detailed Findings</h2>
+    {% if findings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Vulnerability</th>
+                    <th>Severity</th>
+                    <th>Affected URL</th>
+                    <th>Parameter</th>
+                    <th>Method</th>
+                    <th>Payload</th>
+                    <th>Evidence</th>
+                    <th>Remediation</th>
+                    <th>CWE / CVSS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for finding in findings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ finding.vuln_type }}</td>
+                    <td class="severity-{{ finding.severity|upper }}">{{ finding.severity }}</td>
+                    <td>{{ finding.url }}</td>
+                    <td>{{ finding.parameter|default:"-" }}</td>
+                    <td>{{ finding.method }}</td>
+                    <td><span class="code">{{ finding.payload|default:"-" }}</span></td>
+                    <td class="evidence">{{ finding.evidence|default:"-"|linebreaksbr }}</td>
+                    <td class="remediation">{{ finding.remediation|default:"-"|linebreaksbr }}</td>
+                    <td>{% if finding.cwe_id %}{{ finding.cwe_id }}<br>{% endif %}{% if finding.cvss_score %}CVSS: {{ finding.cvss_score }}{% endif %}{% if not finding.cwe_id and not finding.cvss_score %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No vulnerabilities were detected during this scan.</p>
+    {% endif %}
+
+    <div class="footer">Generated by Web Pentest Suite | {{ scan.id }}</div>
+</body>
+</html>
