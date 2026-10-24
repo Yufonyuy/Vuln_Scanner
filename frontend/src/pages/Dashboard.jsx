@@ -4,6 +4,18 @@ import { getScans } from '../api';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+function StatCard({ label, value, accent }) {
+  return (
+    <div className="glass-panel relative overflow-hidden rounded-2xl p-6">
+      <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl ${accent}`} />
+      <div className="relative">
+        <p className="text-sm uppercase tracking-[0.3em] text-gray-500">{label}</p>
+        <p className="mt-4 text-4xl font-semibold text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +24,6 @@ export default function Dashboard() {
   useEffect(() => {
     getScans()
       .then((res) => {
-        // Handle both array and paginated responses
         const data = res.data.results || res.data;
         setScans(Array.isArray(data) ? data : []);
       })
@@ -23,9 +34,16 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const stats = [
+    { label: 'Total Scans', value: scans.length, accent: 'bg-sky-400/10' },
+    { label: 'Running', value: scans.filter((s) => (s.status || '').toUpperCase() === 'RUNNING').length, accent: 'bg-amber-400/10' },
+    { label: 'Completed', value: scans.filter((s) => (s.status || '').toUpperCase() === 'COMPLETED').length, accent: 'bg-emerald-400/10' },
+    { label: 'Findings', value: scans.reduce((sum, s) => sum + (s.finding_count || 0), 0), accent: 'bg-rose-400/10' },
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingSpinner size="w-12 h-12" />
       </div>
     );
@@ -33,13 +51,13 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center p-6">
-        <div className="bg-red-900/30 border border-red-700 text-red-300 p-6 rounded-lg max-w-md">
-          <h2 className="text-xl font-bold mb-2">Error</h2>
-          <p>{error}</p>
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="glass-panel max-w-md rounded-2xl border border-rose-400/40 p-8 text-center">
+          <h2 className="text-xl font-semibold text-rose-200">Something went wrong</h2>
+          <p className="mt-2 text-sm text-gray-400">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-700 hover:bg-red-800 rounded text-white"
+            className="mt-6 rounded-full bg-rose-500/80 px-6 py-2 text-sm font-medium text-white transition hover:bg-rose-400"
           >
             Retry
           </button>
@@ -49,76 +67,126 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1117] p-6 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-100">Dashboard</h1>
-          <Link
-            to="/new"
-            className="mt-3 sm:mt-0 inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white font-medium transition-colors"
-          >
-            <span className="mr-1">+</span> New Scan
+    <div className="space-y-10">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.4em] text-sky-300/70">Overview</p>
+          <h1 className="mt-3 text-4xl font-semibold text-white sm:text-5xl">Security Operations Dashboard</h1>
+          <p className="mt-4 max-w-2xl text-lg text-gray-400">
+            Monitor authenticated scans, live progress, and validated findings from a single command center.
+          </p>
+        </div>
+        <Link
+          to="/new"
+          className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 px-6 py-3 font-medium text-[#05070d] shadow-[0_60px_120px_-80px_rgba(56,189,248,0.9)]"
+        >
+          <span className="relative z-10 flex items-center gap-2">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            Launch New Assessment
+          </span>
+          <span className="absolute inset-0 -translate-x-full bg-white/25 transition-transform duration-700 group-hover:translate-x-0" />
+        </Link>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
+      </div>
+
+      <div className="glass-panel rounded-3xl">
+        <div className="flex flex-col gap-4 border-b border-white/5 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Recent Assessments</h2>
+            <p className="mt-1 text-sm text-gray-500">Track every scan with live status and discovery metrics.</p>
+          </div>
+          <Link to="/new" className="text-sm text-sky-300 transition hover:text-sky-200">
+            Start a new scan →
           </Link>
         </div>
-
         {scans.length === 0 ? (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-12 text-center">
-            <p className="text-gray-400 text-lg">No scans yet. Start your first scan!</p>
+          <div className="flex flex-col items-center gap-4 px-6 py-16 text-center sm:px-8">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-sky-400/20 to-emerald-400/20">
+              <svg viewBox="0 0 24 24" className="h-7 w-7 text-sky-300" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-lg font-medium text-white">No assessments yet</p>
+              <p className="mt-1 text-sm text-gray-500">Launch your first authenticated or unauthenticated scan to see results here.</p>
+            </div>
             <Link
               to="/new"
-              className="mt-4 inline-block px-6 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white font-medium"
+              className="rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 px-6 py-2 text-sm font-medium text-[#05070d]"
             >
-              Start a Scan
+              Create Scan
             </Link>
           </div>
         ) : (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-lg overflow-x-auto shadow-lg">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#1c2128] border-b border-[#30363d]">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-gray-400">Target</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Status</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Progress</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Findings</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Date</th>
-                  <th className="px-4 py-3 font-medium text-gray-400 text-right">Actions</th>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px] text-left text-sm">
+              <thead>
+                <tr className="text-gray-500">
+                  <th className="px-6 py-4 font-medium sm:px-8">Target</th>
+                  <th className="px-4 py-4 font-medium">Status</th>
+                  <th className="px-4 py-4 font-medium">Progress</th>
+                  <th className="px-4 py-4 font-medium">Discoveries</th>
+                  <th className="px-4 py-4 font-medium">Findings</th>
+                  <th className="px-4 py-4 font-medium">Started</th>
+                  <th className="px-6 py-4 text-right font-medium sm:px-8">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#30363d]">
-                {scans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-[#1c2128] transition-colors">
-                    {/* ✅ FIXED: safely access nested target.url */}
-                    <td className="px-4 py-3 truncate max-w-xs text-gray-200">
-                      {scan.target?.url || scan.target}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={scan.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-700 rounded-full h-2">
-                          <div
-                            className="bg-green-500 h-2 rounded-full transition-all"
-                            style={{ width: `${scan.progress}%` }}
-                          ></div>
+              <tbody className="divide-y divide-white/5">
+                {scans.map((scan) => {
+                  const targetUrl = scan.target?.url || scan.target;
+                  return (
+                    <tr key={scan.id} className="group transition hover:bg-white/[0.01]">
+                      <td className="px-6 py-5 sm:px-8">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400/20 to-emerald-400/20 text-sky-300">
+                            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-white">{targetUrl}</p>
+                            <p className="mt-1 text-xs text-gray-500">Depth {scan.depth}</p>
+                          </div>
                         </div>
-                        <span className="text-xs text-gray-400">{scan.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-200">{scan.findings_count || 0}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
-                      {new Date(scan.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        to={`/scan/${scan.id}`}
-                        className="text-blue-400 hover:text-blue-300 hover:underline"
-                      >
-                        Details
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-5">
+                        <StatusBadge status={scan.status} />
+                      </td>
+                      <td className="px-4 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-white/5">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-700"
+                              style={{ width: `${Math.min(Math.max(scan.progress || 0, 0), 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">{scan.progress || 0}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-5 text-gray-400">{scan.discovered_urls?.length || 0} URLs • {scan.forms_found?.length || 0} Forms</td>
+                      <td className="px-4 py-5">
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">{scan.finding_count || 0}</span>
+                      </td>
+                      <td className="px-4 py-5 text-xs text-gray-500">{scan.started_at ? new Date(scan.started_at).toLocaleString() : '—'}</td>
+                      <td className="px-6 py-5 text-right sm:px-8">
+                        <Link to={`/scan/${scan.id}`} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-sky-300 transition hover:bg-white/5 hover:text-sky-200">
+                          View Report
+                          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

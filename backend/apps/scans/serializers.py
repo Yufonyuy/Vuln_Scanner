@@ -39,9 +39,26 @@ class ScanCreateSerializer(serializers.Serializer):
     url = serializers.URLField(required=True)
     depth = serializers.IntegerField(min_value=1, max_value=5, default=2)
     headers = serializers.JSONField(required=False, default=dict)
+    cookies = serializers.CharField(required=False, allow_blank=True, default='', help_text="Raw cookie string e.g. 'sessionid=abc; user=1'")
+    auth_config = serializers.JSONField(required=False, default=dict)
 
     def validate_url(self, value):
         # Basic validation: ensure it has scheme
         if not value.startswith(('http://', 'https://')):
             raise serializers.ValidationError("URL must start with http:// or https://")
+        return value
+
+    def validate_auth_config(self, value):
+        if not value:
+            return value
+        auth_type = value.get('type')
+        allowed = {'login', 'bearer', 'basic'}
+        if auth_type not in allowed:
+            raise serializers.ValidationError("auth_config.type must be one of: login, bearer, basic")
+        if auth_type == 'login' and not value.get('login_url'):
+            raise serializers.ValidationError("login_url is required for login auth")
+        if auth_type == 'bearer' and not value.get('token'):
+            raise serializers.ValidationError("token is required for bearer auth")
+        if auth_type == 'basic' and not value.get('username'):
+            raise serializers.ValidationError("username is required for basic auth")
         return value

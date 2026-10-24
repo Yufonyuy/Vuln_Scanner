@@ -30,9 +30,11 @@ class ScanViewSet(viewsets.ModelViewSet):
         url = create_serializer.validated_data['url']
         depth = create_serializer.validated_data['depth']
         headers = create_serializer.validated_data.get('headers', {})
+        cookies = create_serializer.validated_data.get('cookies', '')
+        auth_config = create_serializer.validated_data.get('auth_config', {})
 
         target, _ = Target.objects.get_or_create(url=url)
-        scan = Scan.objects.create(target=target, depth=depth, headers=headers, status='PENDING')
+        scan = Scan.objects.create(target=target, depth=depth, headers=headers, cookies=cookies, auth_config=auth_config, status='PENDING')
 
         run_scan_async.delay(scan.id)
 
@@ -76,8 +78,19 @@ class ScanPDFExportView(generics.RetrieveAPIView):
         findings = scan.findings.all()
         # Render HTML template
         html_string = render_to_string('scan_report.html', {'scan': scan, 'findings': findings})
-        # Generate PDF
-        pdf_file = HTML(string=html_string).write_pdf()
-        response = HttpResponse(pdf_file, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="scan_{scan.id}_report.pdf"'
-        return response
+        if HTML is None:
+            return HttpResponse(
+                "<h2>PDF export unavailable</h2>"
+                "<p>WeasyPrint is not properly configured in this container.</p>"
+                "<p>Please use the in-app findings view or export as JSON.</p>",
+                content_type='text/html',
+                status=503
+            )
+        try:
+            # Generate PDF
+            pdf_file = HTML(string=html_string).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="scan_{scan.id}_report.pdf"'
+            return response
+        except Exception as e:
+            return HttpResponse(f"PDF generation failed: {e}", content_type='text/html', status=500)

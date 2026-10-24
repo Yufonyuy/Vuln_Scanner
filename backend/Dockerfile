@@ -26,7 +26,15 @@ RUN apt-get update -y --fix-missing && \
         libxrandr2 \
         libgbm-dev \
         libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        libgdk-pixbuf-2.0-0 \
         libcairo2 \
+        libffi-dev \
+        shared-mime-info \
+        fonts-liberation \
+        fonts-dejavu-core \
         libxshmfence1 \
         libx11-xcb1 \
         libxcb1 \

@@ -39,6 +39,8 @@ class Scan(models.Model):
     status = models.CharField(max_length=20, choices=ScanStatusChoices.choices, default=ScanStatusChoices.PENDING)
     depth = models.PositiveIntegerField(default=2, help_text="Crawl depth level")
     headers = models.JSONField(default=dict, blank=True, help_text="Custom HTTP headers sent during the scan")
+    cookies = models.JSONField(default=dict, blank=True, help_text="Session cookies attached to every request during the scan")
+    auth_config = models.JSONField(default=dict, blank=True, help_text="Authentication config: login form, bearer token or basic auth")
 
     # Progress Tracking
     progress = models.PositiveIntegerField(default=0, help_text="0 to 100")
