@@ -66,3 +66,6 @@ RUN playwright install chromium
 
 # Copy the rest of the application
 COPY . .
+
+# Run Daphne ASGI server
+CMD daphne -b 0.0.0.0 -p ${PORT:-8000} core.asgi:application
